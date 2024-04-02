@@ -12,19 +12,7 @@ import { DescriptionComponent } from "./components/DescriptionComponent";
 export default function Home() {
   const [keywordInput, setKeywordInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [generatedText, setGeneratedText] = useState<string | null>(
-    `
-    Are you interested in running Strapi.js on AWS EC2 but not sure where to start? Look no further! In this tutorial, we will guide you through the process step by step, making it easy for you to set up and start using Strapi.js on AWS EC2.
-
-In this tech-savvy video, we will be focusing on using Node.js and Hindi language to help you understand the process better. By the end of this tutorial, you will have a clear understanding of how to run Strapi.js on AWS EC2 and be able to use it effectively in your projects.
-
-Don't forget to hit the subscribe button to stay updated with our latest tech tutorials. If you found this video helpful, give it a thumbs up and feel free to leave a comment if you have any questions or suggestions for future videos.
-
-For more tech tutorials and resources, visit our website [insert link to website]. Get ready to elevate your tech skills and take your projects to the next level with Strapi.js on AWS EC2!
-
-Target Audience: This video is perfect for tech enthusiasts, developers, and anyone looking to enhance their knowledge of running Strapi.js on AWS EC2 using Node.js in Hindi language. Whether you are a beginner or an experienced user, this tutorial will provide you with valuable insights and tips.
-    `
-  );
+  const [generatedText, setGeneratedText] = useState<string | null>(null);
 
   const outputComponent = useRef<HTMLDivElement>(null);
 
@@ -152,8 +140,8 @@ Target Audience: This video is perfect for tech enthusiasts, developers, and any
                   axios
                     .post(`/api/generate`, form.values)
                     .then(({ data }) => {
-                      outputComponent.current?.scrollIntoView();
                       setGeneratedText(data);
+                      outputComponent.current?.scrollIntoView();
                     })
                     .catch((err) => {
                       alert("something went wrong!");
