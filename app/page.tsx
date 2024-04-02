@@ -2,11 +2,31 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import { CircularProgress, IconButton } from "@mui/material";
+import axios from "axios";
 import { useFormik, FormikProvider, FieldArray } from "formik";
-import { KeyboardEvent, useState } from "react";
+import { useRef, useState } from "react";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { DescriptionComponent } from "./components/DescriptionComponent";
 
 export default function Home() {
   const [keywordInput, setKeywordInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [generatedText, setGeneratedText] = useState<string | null>(
+    `
+    Are you interested in running Strapi.js on AWS EC2 but not sure where to start? Look no further! In this tutorial, we will guide you through the process step by step, making it easy for you to set up and start using Strapi.js on AWS EC2.
+
+In this tech-savvy video, we will be focusing on using Node.js and Hindi language to help you understand the process better. By the end of this tutorial, you will have a clear understanding of how to run Strapi.js on AWS EC2 and be able to use it effectively in your projects.
+
+Don't forget to hit the subscribe button to stay updated with our latest tech tutorials. If you found this video helpful, give it a thumbs up and feel free to leave a comment if you have any questions or suggestions for future videos.
+
+For more tech tutorials and resources, visit our website [insert link to website]. Get ready to elevate your tech skills and take your projects to the next level with Strapi.js on AWS EC2!
+
+Target Audience: This video is perfect for tech enthusiasts, developers, and anyone looking to enhance their knowledge of running Strapi.js on AWS EC2 using Node.js in Hindi language. Whether you are a beginner or an experienced user, this tutorial will provide you with valuable insights and tips.
+    `
+  );
+
+  const outputComponent = useRef<HTMLDivElement>(null);
 
   const form = useFormik({
     initialValues: {
@@ -41,8 +61,10 @@ export default function Home() {
               name="keywords"
               render={(arrayHelpers) => {
                 return (
-                  <div className="mt-3">
-                    <div className="flex gap-5">
+                  <div
+                    className={`${form.values.keywords.length ? "mt-3" : ""}`}
+                  >
+                    <div className="flex gap-5 flex-wrap">
                       {form.values.keywords.map((keyword: string, index) => {
                         return (
                           <div
@@ -62,40 +84,44 @@ export default function Home() {
                         );
                       })}
                     </div>
-                    <div className="mt-5 rounded-2xl px-4 py-2 border border-white text-xl w-fit">
-                      <input
-                        type="text"
-                        className="bg-inherit outline-none"
-                        placeholder="add keyword"
-                        value={keywordInput}
-                        onChange={({ target }) => {
-                          setKeywordInput(target.value || "");
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" && keywordInput.length) {
-                            arrayHelpers.insert(
-                              form.values.keywords.length,
-                              keywordInput
-                            );
-                            setKeywordInput("");
-                          }
-                        }}
-                      />
-                      <div
-                        className="inline-block"
-                        onClick={() => {
-                          if (keywordInput.length) {
-                            arrayHelpers.insert(
-                              form.values.keywords.length,
-                              keywordInput
-                            );
-                            setKeywordInput("");
-                          }
-                        }}
-                      >
-                        <AddIcon className="cursor-pointer" />
+                    {form.values.keywords.length < 5 ? (
+                      <div className="mt-5 rounded-2xl px-4 py-2 border border-white text-xl w-fit">
+                        <input
+                          type="text"
+                          className="bg-inherit outline-none"
+                          placeholder="add keyword"
+                          value={keywordInput}
+                          onChange={({ target }) => {
+                            setKeywordInput(target.value || "");
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" && keywordInput.length) {
+                              arrayHelpers.insert(
+                                form.values.keywords.length,
+                                keywordInput
+                              );
+                              setKeywordInput("");
+                            }
+                          }}
+                        />
+                        <div
+                          className="inline-block"
+                          onClick={() => {
+                            if (keywordInput.length) {
+                              arrayHelpers.insert(
+                                form.values.keywords.length,
+                                keywordInput
+                              );
+                              setKeywordInput("");
+                            }
+                          }}
+                        >
+                          <AddIcon className="cursor-pointer" />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <></>
+                    )}
                   </div>
                 );
               }}
@@ -115,9 +141,55 @@ export default function Home() {
         </div>
 
         <div className="">
-          <button className="border border-white py-2 px-10 rounded-2xl text-xl focus:rounded-xl hover:rounded-xl">
-            Generate
-          </button>
+          {loading ? (
+            <CircularProgress color="inherit" />
+          ) : (
+            <button
+              className="border border-white py-2 px-10 rounded-2xl text-xl focus:rounded-xl hover:rounded-xl"
+              onClick={() => {
+                if (form.values.title && form.values.keywords.length) {
+                  setLoading(true);
+                  axios
+                    .post(`/api/generate`, form.values)
+                    .then(({ data }) => {
+                      outputComponent.current?.scrollIntoView();
+                      setGeneratedText(data);
+                    })
+                    .catch((err) => {
+                      alert("something went wrong!");
+                      console.error(err);
+                    })
+                    .finally(() => {
+                      setLoading(false);
+                    });
+                } else {
+                  alert("please enter details!");
+                }
+              }}
+            >
+              Generate
+            </button>
+          )}{" "}
+        </div>
+
+        <div ref={outputComponent}>
+          {generatedText ? (
+            <div>
+              <DescriptionComponent description={generatedText} />
+              <div className="flex justify-end p-3">
+                <IconButton
+                  color="inherit"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedText);
+                  }}
+                >
+                  <ContentCopyIcon />
+                </IconButton>
+              </div>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>

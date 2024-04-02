@@ -1,20 +1,25 @@
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async () => {
+export interface IFormData {
+  title: string;
+  keywords: string[];
+  description?: string;
+}
+
+export const POST = async (req: NextRequest) => {
   try {
     const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
+    const body: IFormData = await req.json();
+    const { title, keywords, description } = body;
 
-    const title = "top 10 rivers in India";
-    const keywords = [
-      "indian rivers",
-      "top 10 comparison",
-      "best rivers in india",
-      "longest river in india",
-      "biggest rivers in India in hindi",
-    ];
+    let descriptionString = "";
 
-    const prompt = `Write a compelling and SEO optimized YouTube description for a video titled "${title}". Here are some keywords to consider: ${keywords.join(
+    if (description) {
+      descriptionString = `and brief description about video: "${description}"`;
+    }
+
+    const prompt = `Write a compelling and SEO optimized YouTube description for a video titled "${title}" ${descriptionString}. Here are some keywords to consider: ${keywords.join(
       ", "
     )}.
 
@@ -31,7 +36,7 @@ export const GET = async () => {
       messages: [{ role: "user", content: prompt }],
       model: "gpt-3.5-turbo",
     });
-    return NextResponse.json(chatCompletion.choices);
+    return NextResponse.json(chatCompletion.choices[0].message.content);
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
   }
